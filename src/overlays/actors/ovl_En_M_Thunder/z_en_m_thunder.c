@@ -11,6 +11,7 @@ void EnMThunder_Draw(Actor* thisx, GlobalContext* globalCtx);
 void func_80A9F314(GlobalContext* globalCtx, f32 arg1);
 void func_80A9F408(EnMThunder* this, GlobalContext* globalCtx);
 void func_80A9F9B4(EnMThunder* this, GlobalContext* globalCtx);
+void func_bladebeam(EnMThunder* this, GlobalContext* globalCtx);
 
 const ActorInit En_M_Thunder_InitVars = {
     ACTOR_EN_M_THUNDER,
@@ -48,6 +49,8 @@ static u32 D_80AA044C[] = { 0x01000000, 0x00400000, 0x00800000 };
 static u32 D_80AA0458[] = { 0x08000000, 0x02000000, 0x04000000 };
 
 static u16 sSfxIds[] = {
+    NA_SE_IT_ROLLING_CUT_LV2,
+    NA_SE_IT_ROLLING_CUT_LV1,
     NA_SE_IT_ROLLING_CUT_LV2,
     NA_SE_IT_ROLLING_CUT_LV1,
     NA_SE_IT_ROLLING_CUT_LV2,
@@ -194,17 +197,29 @@ void func_80A9F408(EnMThunder* this, GlobalContext* globalCtx) {
             if ((this->actor.params & 0xFF00) >> 8) {
                 gSaveContext.unk_13F0 = 1;
             }
-            if (player->unk_858 < 0.85f) {
-                this->collider.info.toucher.dmgFlags = D_80AA044C[this->unk_1C7];
-                this->unk_1C6 = 1;
-                this->unk_1C9 = ((this->unk_1C7 == 1) ? 2 : 4);
+            if (player->stateFlags1 & 0x8000) { // player is z-targeting, do bladebeam
+                    if (player->unk_858 < 0.85f) { // blue bladebeam
+                    this->collider.info.toucher.dmgFlags = D_80AA044C[this->unk_1C7]; // sets damage flags
+                    } else { // red bladebeam
+                        this->collider.info.toucher.dmgFlags = D_80AA0458[this->unk_1C7]; // sets damage flags
+                    }
+                    this->unk_1C6 = 2; // sets case for bladebeam displaylist
+                    this->unk_1C8 = 0; // stop charge effect being visible
+                    // this->unk_1BC = 0;
+                    func_80A9EFE0(this, func_bladebeam);
             } else {
-                this->collider.info.toucher.dmgFlags = D_80AA0458[this->unk_1C7];
-                this->unk_1C6 = 0;
-                this->unk_1C9 = ((this->unk_1C7 == 1) ? 4 : 8);
+                if (player->unk_858 < 0.85f) { // blue spin attack
+                    this->collider.info.toucher.dmgFlags = D_80AA044C[this->unk_1C7];
+                    this->unk_1C6 = 1;
+                    this->unk_1C9 = ((this->unk_1C7 == 1) ? 2 : 4);
+                } else { // red spin attack
+                    this->collider.info.toucher.dmgFlags = D_80AA0458[this->unk_1C7];
+                    this->unk_1C6 = 0;
+                    this->unk_1C9 = ((this->unk_1C7 == 1) ? 4 : 8);
+                }
+                func_80A9EFE0(this, func_80A9F9B4);
             }
 
-            func_80A9EFE0(this, func_80A9F9B4);
             this->unk_1C4 = 8;
             Audio_PlaySoundGeneral(sSfxIds[this->unk_1C6], &player->actor.projectedPos, 4, &D_801333E0, &D_801333E0,
                                    &D_801333E8);
@@ -300,6 +315,40 @@ void func_80A9F9B4(EnMThunder* this, GlobalContext* globalCtx) {
     }
 }
 
+void func_bladebeam(EnMThunder* this, GlobalContext* globalCtx) {
+    Player* player = GET_PLAYER(globalCtx);
+
+    this->actor.world.pos.x += ((Math_CosS(this->actor.prevPos.x) * - 9.0f) * (Math_SinS(this->actor.shape.rot.y)));
+    this->actor.world.pos.z += ((Math_CosS(this->actor.prevPos.x) * - 9.0f) * (Math_CosS(this->actor.shape.rot.y)));
+
+    if (Math_StepToF(&this->unk_1AC, 0.0f, 1 / 16.0f)) {
+        Actor_Kill(&this->actor);
+    } else {
+        Math_SmoothStepToF(&this->actor.scale.x, 20.0f, 1.0f, 2.0f, 0.0f);
+        // (f32* pValue, f32 target, f32 fraction, f32 step, f32 minStep);
+        Actor_SetScale(&this->actor, this->actor.scale.x);
+        this->collider.dim.radius = (this->actor.scale.x * 7.0f);
+        Collider_UpdateCylinder(&this->actor, &this->collider);
+        CollisionCheck_SetAT(globalCtx, &globalCtx->colChkCtx, &this->collider.base);
+    }
+
+    if (this->unk_1C4 > 0) { // unk_1C4 = timer
+        this->unk_1C4--;
+    }
+
+    if (this->unk_1AC > 0.6f) { // unk_1AC is related to effect radius
+        this->unk_1B0 = 1.0f; // unk_1B0 sets alpha value for displaylist
+    } else {
+        this->unk_1B0 = this->unk_1AC * (5.0f / 3.0f);
+    }
+
+    func_80A9F938(this, globalCtx);
+
+    if (Gameplay_InCsMode(globalCtx)) {
+        Actor_Kill(&this->actor);
+    }
+}
+
 void EnMThunder_Update(Actor* thisx, GlobalContext* globalCtx) {
     EnMThunder* this = (EnMThunder*)thisx;
     f32 blueRadius;
@@ -322,6 +371,8 @@ void EnMThunder_Draw(Actor* thisx, GlobalContext* globalCtx2) {
     f32 phi_f14;
     s32 phi_t1;
 
+    // Collider_Draw(globalCtx, &this->collider);
+
     OPEN_DISPS(globalCtx->state.gfxCtx, "../z_en_m_thunder.c", 844);
     func_80093D84(globalCtx->state.gfxCtx);
     Matrix_Scale(0.02f, 0.02f, 0.02f, MTXMODE_APPLY);
@@ -329,24 +380,36 @@ void EnMThunder_Draw(Actor* thisx, GlobalContext* globalCtx2) {
               G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
 
     switch (this->unk_1C6) {
-        case 0:
-        case 1:
+        case 0: // red spin attack
+        case 1: // blue spin attack
+        case 2: // bladebeam
             gSPSegment(POLY_XLU_DISP++, 0x08,
                        Gfx_TwoTexScroll(globalCtx->state.gfxCtx, 0, 0xFF - ((u8)(s32)(this->unk_1B4 * 30) & 0xFF), 0,
                                         0x40, 0x20, 1, 0xFF - ((u8)(s32)(this->unk_1B4 * 20) & 0xFF), 0, 8, 8));
             break;
     }
 
-    switch (this->unk_1C6) {
-        case 0:
+    switch (this->unk_1C6) { // switches between blue and red spin attack circle effect after release
+        case 0: // red release attack effect
             gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 255, 255, 170, (u8)(this->unk_1B0 * 255));
             gSPDisplayList(POLY_XLU_DISP++, gSpinAttack3DL);
             gSPDisplayList(POLY_XLU_DISP++, gSpinAttack4DL);
             break;
-        case 1:
+        case 1: // blue release attack effect
             gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 170, 255, 255, (u8)(this->unk_1B0 * 255));
             gSPDisplayList(POLY_XLU_DISP++, gSpinAttack1DL);
             gSPDisplayList(POLY_XLU_DISP++, gSpinAttack2DL);
+            break;
+        case 2: // bladebeam
+            if (this->unk_1B8 >= 0.85f) { // red bladebeam
+                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 255, 255, 170, (u8)(this->unk_1B0 * 255));
+                gDPSetEnvColor(POLY_XLU_DISP++, 255, 100, 0, 128);
+            } else { // blue bladebeam
+                gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 170, 255, 255, (u8)(this->unk_1B0 * 255));
+                gDPSetEnvColor(POLY_XLU_DISP++, 0, 100, 255, 128);
+            }
+            gSPDisplayList(POLY_XLU_DISP++, gUnusedBeamBladeDL);
+            phi_t1 = 0;
             break;
     }
 
@@ -370,17 +433,18 @@ void EnMThunder_Draw(Actor* thisx, GlobalContext* globalCtx2) {
             break;
     }
 
-    if (this->unk_1B8 >= 0.85f) {
+    if (this->unk_1B8 >= 0.85f) { // red spin charge effect
         phi_f14 = (D_80AA046C[(globalCtx->gameplayFrames & 7)] * 6.0f) + 1.0f;
         gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 255, 255, 170, this->unk_1C8);
         gDPSetEnvColor(POLY_XLU_DISP++, 255, 100, 0, 128);
         phi_t1 = 0x28;
-    } else {
+    } else { // blue spin charge effect
         phi_f14 = (D_80AA046C[globalCtx->gameplayFrames & 7] * 2.0f) + 1.0f;
         gDPSetPrimColor(POLY_XLU_DISP++, 0, 0x80, 170, 255, 255, this->unk_1C8);
         gDPSetEnvColor(POLY_XLU_DISP++, 0, 100, 255, 128);
         phi_t1 = 0x14;
     }
+
     Matrix_Scale(1.0f, phi_f14, phi_f14, MTXMODE_APPLY);
     gSPMatrix(POLY_XLU_DISP++, Matrix_NewMtx(globalCtx->state.gfxCtx, "../z_en_m_thunder.c", 960),
               G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);

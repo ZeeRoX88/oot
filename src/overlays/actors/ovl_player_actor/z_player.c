@@ -1055,17 +1055,17 @@ static struct_80854190 D_80854190[] = {
     { &gPlayerAnim_002C40, &gPlayerAnim_002C50, &gPlayerAnim_002C48, 3, 10 },
     { &gPlayerAnim_002C70, &gPlayerAnim_002C80, &gPlayerAnim_002C78, 2, 11 },
     { &gPlayerAnim_002B28, &gPlayerAnim_002B30, &gPlayerAnim_002560, 0, 12 },
-    { &gPlayerAnim_002940, &gPlayerAnim_002948, &gPlayerAnim_0024B8, 0, 15 },
-    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_002560, 0, 16 },
-    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_0024B8, 0, 16 },
+    { &gPlayerAnim_002940, &gPlayerAnim_002948, &gPlayerAnim_0024B8, 0, 15 }, // longsword spin attack
+    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_002560, 0, 16 }, // sword spin attack
+    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_0024B8, 0, 16 }, // sword spin attack
 };
 
-static LinkAnimationHeader* D_80854350[] = {
+static LinkAnimationHeader* D_80854350[] = { // Spin Charge Animation
     &gPlayerAnim_002AE8,
     &gPlayerAnim_002920,
 };
 
-static LinkAnimationHeader* D_80854358[] = {
+static LinkAnimationHeader* D_80854358[] = { // Spin Charge Animation
     &gPlayerAnim_002AE0,
     &gPlayerAnim_002920,
 };
@@ -1092,6 +1092,7 @@ static LinkAnimationHeader* D_80854378[] = {
 
 static u8 D_80854380[2] = { 0x18, 0x19 };
 static u8 D_80854384[2] = { 0x1A, 0x1B };
+static u8 D_Bladebeam[2] = { 0x0C, 0x0D }; // one and twohanded animation set for bladebeam
 
 static u16 D_80854388[] = { BTN_B, BTN_CLEFT, BTN_CDOWN, BTN_CRIGHT };
 
@@ -3194,7 +3195,7 @@ s32 func_808374A0(GlobalContext* globalCtx, Player* this, SkelAnime* skelAnime, 
     return -1;
 }
 
-void func_80837530(GlobalContext* globalCtx, Player* this, s32 arg2) {
+void func_80837530(GlobalContext* globalCtx, Player* this, s32 arg2) { // spawn spin attack actor
     if (arg2 != 0) {
         this->unk_858 = 0.0f;
     } else {
@@ -3246,13 +3247,13 @@ s32 func_808375D8(Player* this) {
     return 1;
 }
 
-void func_80837704(GlobalContext* globalCtx, Player* this) {
+void func_80837704(GlobalContext* globalCtx, Player* this) { // spin attack charge
     LinkAnimationHeader* anim;
 
     if ((this->swordAnimation >= 4) && (this->swordAnimation < 8)) {
-        anim = D_80854358[Player_HoldsTwoHandedWeapon(this)];
+        anim = D_80854358[Player_HoldsTwoHandedWeapon(this)]; // spin attack charging animation
     } else {
-        anim = D_80854350[Player_HoldsTwoHandedWeapon(this)];
+        anim = D_80854350[Player_HoldsTwoHandedWeapon(this)]; // spin attack charging animation
     }
 
     func_80832318(this);
@@ -5183,7 +5184,7 @@ void func_8083C50C(Player* this) {
     }
 }
 
-s32 func_8083C544(Player* this, GlobalContext* globalCtx) {
+s32 func_8083C544(Player* this, GlobalContext* globalCtx) { // spin attack?
     if (CHECK_BTN_ALL(sControlInput->cur.button, BTN_B)) {
         if (!(this->stateFlags1 & 0x400000) && (Player_GetSwordHeld(this) != 0) && (this->unk_844 == 1) &&
             (this->heldItemActionParam != PLAYER_AP_STICK)) {
@@ -8204,17 +8205,21 @@ void func_80844AF4(Player* this, GlobalContext* globalCtx) {
     }
 }
 
-s32 func_80844BE4(Player* this, GlobalContext* globalCtx) {
+s32 func_80844BE4(Player* this, GlobalContext* globalCtx) { // spin attack release animation
     s32 temp;
 
     if (func_8083ADD4(globalCtx, this)) {
         this->stateFlags2 |= 0x20000;
     } else {
         if (!CHECK_BTN_ALL(sControlInput->cur.button, BTN_B)) {
-            if ((this->unk_858 >= 0.85f) || func_808375D8(this)) {
-                temp = D_80854384[Player_HoldsTwoHandedWeapon(this)];
+            if (this->stateFlags1 & 0x8000) { // player is z-targeting, do bladebeam
+                temp = D_Bladebeam[Player_HoldsTwoHandedWeapon(this)];
             } else {
-                temp = D_80854380[Player_HoldsTwoHandedWeapon(this)];
+                if ((this->unk_858 >= 0.85f) || func_808375D8(this)) {
+                    temp = D_80854384[Player_HoldsTwoHandedWeapon(this)];
+                } else {
+                    temp = D_80854380[Player_HoldsTwoHandedWeapon(this)];
+                }                
             }
 
             func_80837948(globalCtx, this, temp);
