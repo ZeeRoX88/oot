@@ -53,8 +53,6 @@ static u16 sSfxIds[] = {
     NA_SE_IT_ROLLING_CUT_LV1,
     NA_SE_IT_ROLLING_CUT_LV2,
     NA_SE_IT_ROLLING_CUT_LV1,
-    NA_SE_IT_ROLLING_CUT_LV2,
-    NA_SE_IT_ROLLING_CUT_LV1,
 };
 
 // Setup action
