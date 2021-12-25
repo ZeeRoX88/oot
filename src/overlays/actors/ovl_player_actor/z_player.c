@@ -8207,14 +8207,20 @@ void func_80844AF4(Player* this, GlobalContext* globalCtx) {
 
 s32 func_80844BE4(Player* this, GlobalContext* globalCtx) { // spin attack release animation
     s32 temp;
+    s16 yawDiff;
+
+    yawDiff = this->currentYaw - this->actor.shape.rot.y;
 
     if (func_8083ADD4(globalCtx, this)) {
         this->stateFlags2 |= 0x20000;
     } else {
         if (!CHECK_BTN_ALL(sControlInput->cur.button, BTN_B)) {
-            if (this->stateFlags1 & 0x8000) { // player is z-targeting, do bladebeam
+            // player is z-targeting and moving forwards -> do bladebeam
+            if ((ABS(yawDiff) < 0x1000) && this->actor.speedXZ > 0.1f && (this->stateFlags1 & 0x8000 || CHECK_BTN_ALL(sControlInput->cur.button, BTN_Z))) {
+                this->doBladebeam = 1;
                 temp = D_Bladebeam[Player_HoldsTwoHandedWeapon(this)];
             } else {
+                this->doBladebeam = 0;
                 if ((this->unk_858 >= 0.85f) || func_808375D8(this)) {
                     temp = D_80854384[Player_HoldsTwoHandedWeapon(this)];
                 } else {
