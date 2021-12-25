@@ -195,15 +195,13 @@ void func_80A9F408(EnMThunder* this, GlobalContext* globalCtx) {
             if ((this->actor.params & 0xFF00) >> 8) {
                 gSaveContext.unk_13F0 = 1;
             }
-            if (player->stateFlags1 & 0x8000) { // player is z-targeting, do bladebeam
+            if (player->doBladebeam == 1) { // player is z-targeting and moving forward, do bladebeam
                     if (player->unk_858 < 0.85f) { // blue bladebeam
                     this->collider.info.toucher.dmgFlags = D_80AA044C[this->unk_1C7]; // sets damage flags
                     } else { // red bladebeam
                         this->collider.info.toucher.dmgFlags = D_80AA0458[this->unk_1C7]; // sets damage flags
                     }
                     this->unk_1C6 = 2; // sets case for bladebeam displaylist
-                    this->unk_1C8 = 0; // stop charge effect being visible
-                    // this->unk_1BC = 0;
                     func_80A9EFE0(this, func_bladebeam);
             } else {
                 if (player->unk_858 < 0.85f) { // blue spin attack
@@ -264,7 +262,16 @@ void func_80A9F408(EnMThunder* this, GlobalContext* globalCtx) {
 }
 
 void func_80A9F938(EnMThunder* this, GlobalContext* globalCtx) {
-    if (this->unk_1C4 < 2) {
+    u8 fadecharge;
+
+    if (this->unk_1C6 == 2) {
+        fadecharge = 6; // bladebeam, starts to fade earlier
+    } else {
+        fadecharge = 2; // spin attacks, starts to fade later
+    }
+
+    // this sets the duration for the charge effect around the sword
+    if (this->unk_1C4 < fadecharge) {
         if (this->unk_1C8 < 40) {
             this->unk_1C8 = 0;
         } else {
@@ -325,9 +332,11 @@ void func_bladebeam(EnMThunder* this, GlobalContext* globalCtx) {
         Math_SmoothStepToF(&this->actor.scale.x, 20.0f, 1.0f, 2.0f, 0.0f);
         // (f32* pValue, f32 target, f32 fraction, f32 step, f32 minStep);
         Actor_SetScale(&this->actor, this->actor.scale.x);
-        this->collider.dim.radius = (this->actor.scale.x * 7.0f);
         Collider_UpdateCylinder(&this->actor, &this->collider);
         CollisionCheck_SetAT(globalCtx, &globalCtx->colChkCtx, &this->collider.base);
+        this->collider.dim.radius = (this->actor.scale.x * 6.0f);
+        this->collider.dim.pos.x += ((Math_CosS(this->actor.prevPos.x) * - 50.0f) * (Math_SinS(this->actor.shape.rot.y)));
+        this->collider.dim.pos.z += ((Math_CosS(this->actor.prevPos.x) * - 50.0f) * (Math_CosS(this->actor.shape.rot.y)));
     }
 
     if (this->unk_1C4 > 0) { // unk_1C4 = timer
@@ -413,7 +422,7 @@ void EnMThunder_Draw(Actor* thisx, GlobalContext* globalCtx2) {
 
     Matrix_Mult(&player->mf_9E0, MTXMODE_NEW);
 
-    switch (this->unk_1C7) {
+    switch (this->unk_1C7) { // for charging effects
         case 1:
             Matrix_Translate(0.0f, 220.0f, 0.0f, MTXMODE_APPLY);
             Matrix_Scale(-0.7f, -0.6f, -0.4f, MTXMODE_APPLY);
