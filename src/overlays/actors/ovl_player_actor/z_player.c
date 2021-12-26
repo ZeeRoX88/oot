@@ -1055,17 +1055,17 @@ static struct_80854190 D_80854190[] = {
     { &gPlayerAnim_002C40, &gPlayerAnim_002C50, &gPlayerAnim_002C48, 3, 10 },
     { &gPlayerAnim_002C70, &gPlayerAnim_002C80, &gPlayerAnim_002C78, 2, 11 },
     { &gPlayerAnim_002B28, &gPlayerAnim_002B30, &gPlayerAnim_002560, 0, 12 },
-    { &gPlayerAnim_002940, &gPlayerAnim_002948, &gPlayerAnim_0024B8, 0, 15 }, // longsword spin attack
-    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_002560, 0, 16 }, // sword spin attack
-    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_0024B8, 0, 16 }, // sword spin attack
+    { &gPlayerAnim_002940, &gPlayerAnim_002948, &gPlayerAnim_0024B8, 0, 15 }, // two-handed spin attack animation set
+    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_002560, 0, 16 }, // one-handed spin attack animation set
+    { &gPlayerAnim_0029C0, &gPlayerAnim_0029C8, &gPlayerAnim_0024B8, 0, 16 }, // one-handed spin attack animation set
 };
 
-static LinkAnimationHeader* D_80854350[] = { // Spin Charge Animation
+static LinkAnimationHeader* D_80854350[] = { // spin charge animations
     &gPlayerAnim_002AE8,
     &gPlayerAnim_002920,
 };
 
-static LinkAnimationHeader* D_80854358[] = { // Spin Charge Animation
+static LinkAnimationHeader* D_80854358[] = { // spin charge animations
     &gPlayerAnim_002AE0,
     &gPlayerAnim_002920,
 };
@@ -1092,7 +1092,7 @@ static LinkAnimationHeader* D_80854378[] = {
 
 static u8 D_80854380[2] = { 0x18, 0x19 };
 static u8 D_80854384[2] = { 0x1A, 0x1B };
-static u8 D_Bladebeam[2] = { 0x0C, 0x0D }; // one and twohanded animation set for bladebeam
+static u8 D_Beamblade[2] = { 0x0C, 0x0D }; // points to one-handed and two-handed animation set for beamblade inside D_80854190
 
 static u16 D_80854388[] = { BTN_B, BTN_CLEFT, BTN_CDOWN, BTN_CRIGHT };
 
@@ -5184,7 +5184,7 @@ void func_8083C50C(Player* this) {
     }
 }
 
-s32 func_8083C544(Player* this, GlobalContext* globalCtx) { // spin attack?
+s32 func_8083C544(Player* this, GlobalContext* globalCtx) {
     if (CHECK_BTN_ALL(sControlInput->cur.button, BTN_B)) {
         if (!(this->stateFlags1 & 0x400000) && (Player_GetSwordHeld(this) != 0) && (this->unk_844 == 1) &&
             (this->heldItemActionParam != PLAYER_AP_STICK)) {
@@ -8215,12 +8215,12 @@ s32 func_80844BE4(Player* this, GlobalContext* globalCtx) { // spin attack relea
         this->stateFlags2 |= 0x20000;
     } else {
         if (!CHECK_BTN_ALL(sControlInput->cur.button, BTN_B)) {
-            // player is z-targeting and moving forwards -> do bladebeam
+            // player is z-targeting and moving forwards -> do beamblade
             if ((ABS(yawDiff) < 0x1000) && this->actor.speedXZ > 0.1f && (this->stateFlags1 & 0x8000 || CHECK_BTN_ALL(sControlInput->cur.button, BTN_Z))) {
-                this->doBladebeam = 1;
-                temp = D_Bladebeam[Player_HoldsTwoHandedWeapon(this)];
+                this->doBeamblade = 1;
+                temp = D_Beamblade[Player_HoldsTwoHandedWeapon(this)];
             } else {
-                this->doBladebeam = 0;
+                this->doBeamblade = 0;
                 if ((this->unk_858 >= 0.85f) || func_808375D8(this)) {
                     temp = D_80854384[Player_HoldsTwoHandedWeapon(this)];
                 } else {
