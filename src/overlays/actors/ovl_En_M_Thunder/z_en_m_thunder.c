@@ -73,8 +73,8 @@ void EnMThunder_Init(Actor* thisx, GlobalContext* globalCtx2) {
                               this->actor.world.pos.z, 255, 255, 255, 0);
     this->lightNode = LightContext_InsertLight(globalCtx, &globalCtx->lightCtx, &this->lightInfo);
     this->collider.dim.radius = 0;
-    this->collider.dim.height = 50;
-    this->collider.dim.yShift = -30;
+    this->collider.dim.height = 40;
+    this->collider.dim.yShift = -20;
     this->unk_1C4 = 8;
     this->unk_1B4 = 0.0f;
     this->actor.world.pos = player->bodyPartsPos[0];
@@ -196,7 +196,7 @@ void func_80A9F408(EnMThunder* this, GlobalContext* globalCtx) {
             if ((this->actor.params & 0xFF00) >> 8) {
                 gSaveContext.unk_13F0 = 1;
             }
-            if (player->doBladebeam == 1) { // player is z-targeting and moving forward, do beamblade
+            if (player->doBeamblade == 1) { // player is z-targeting and moving forward, do beamblade
                 if (player->unk_858 < 0.85f) { // blue beamblade
                     this->collider.info.toucher.dmgFlags = D_80AA044C[this->unk_1C7]; // sets damage flags
                 } else { // red beamblade
@@ -339,6 +339,8 @@ void EnMThunder_SetupBeamblade(EnMThunder* this, GlobalContext* globalCtx) {
     this->actor.world.rot.y = player->actor.shape.rot.y; // yaw always like player
     this->actor.shape.rot.x -= this->actor.world.rot.x; // shape pitch
     func_8002D9A4(&this->actor, 10.0f); // sets xyz movement speed
+    this->collider.dim.height = 50;
+    this->collider.dim.yShift = -25;
     func_80A9EFE0(this, EnMThunder_Beamblade);
 }
 
@@ -437,7 +439,6 @@ void EnMThunder_Draw(Actor* thisx, GlobalContext* globalCtx2) {
                 gDPSetEnvColor(POLY_XLU_DISP++, 0, 100, 255, 128);
             }
             gSPDisplayList(POLY_XLU_DISP++, gUnusedBeamBladeDL);
-            phi_t1 = 0;
             break;
     }
 
