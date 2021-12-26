@@ -399,7 +399,7 @@ void EnMThunder_Draw(Actor* thisx, GlobalContext* globalCtx2) {
     f32 phi_f14;
     s32 phi_t1;
 
-    Collider_Draw(globalCtx, &this->collider);
+    // Collider_Draw(globalCtx, &this->collider);
 
     OPEN_DISPS(globalCtx->state.gfxCtx, "../z_en_m_thunder.c", 844);
     func_80093D84(globalCtx->state.gfxCtx);
