@@ -2150,5 +2150,122 @@ s32 Math3D_YZInSphere(Sphere16* sphere, f32 y, f32 z) {
 void Math3D_DrawSphere(GlobalContext* globalCtx, Sphere16* sph) {
 }
 
+void Math3D_DrawCylinderImpl(GraphicsContext* gfxCtx, Gfx** gfxP, f32 x, f32 y, f32 z, s16 radius, s16 height) {
+    static Gfx* pCylGfx = NULL;
+
+    if (!pCylGfx) {
+        static Gfx cylGfx[5 + 12 * 2];
+        static Vtx cylVtx[2 + 12 * 2];
+
+        s32 i;
+        Gfx* cylGfxP = pCylGfx = cylGfx;
+
+        cylVtx[0].n.ob[0] = 0;
+        cylVtx[0].n.ob[1] = 0;
+        cylVtx[0].n.ob[2] = 0;
+        cylVtx[0].n.flag = 0;
+        cylVtx[0].n.tc[0] = 0;
+        cylVtx[0].n.tc[1] = 0;
+        cylVtx[0].n.n[0] = 0;
+        cylVtx[0].n.n[1] = -127;
+        cylVtx[0].n.n[2] = 0;
+        cylVtx[0].n.a = 255;
+
+        cylVtx[1].n.ob[0] = 0;
+        cylVtx[1].n.ob[1] = 128;
+        cylVtx[1].n.ob[2] = 0;
+        cylVtx[1].n.flag = 0;
+        cylVtx[1].n.tc[0] = 0;
+        cylVtx[1].n.tc[1] = 0;
+        cylVtx[1].n.n[0] = 0;
+        cylVtx[1].n.n[1] = 127;
+        cylVtx[1].n.n[2] = 0;
+        cylVtx[1].n.a = 255;
+
+        for (i = 0; i < 12; ++i) {
+            s32 vtxX = Math_FFloorF(0.5f + cosf(2.f * M_PI * i / 12) * 128.f);
+            s32 vtxZ = Math_FFloorF(0.5f - sinf(2.f * M_PI * i / 12) * 128.f);
+            s32 normX = cosf(2.f * M_PI * i / 12) * 127.f;
+            s32 normZ = -sinf(2.f * M_PI * i / 12) * 127.f;
+
+            cylVtx[2 + i * 2 + 0].n.ob[0] = vtxX;
+            cylVtx[2 + i * 2 + 0].n.ob[1] = 0;
+            cylVtx[2 + i * 2 + 0].n.ob[2] = vtxZ;
+            cylVtx[2 + i * 2 + 0].n.flag = 0;
+            cylVtx[2 + i * 2 + 0].n.tc[0] = 0;
+            cylVtx[2 + i * 2 + 0].n.tc[1] = 0;
+            cylVtx[2 + i * 2 + 0].n.n[0] = normX;
+            cylVtx[2 + i * 2 + 0].n.n[1] = 0;
+            cylVtx[2 + i * 2 + 0].n.n[2] = normZ;
+            cylVtx[2 + i * 2 + 0].n.a = 255;
+
+            cylVtx[2 + i * 2 + 1].n.ob[0] = vtxX;
+            cylVtx[2 + i * 2 + 1].n.ob[1] = 128;
+            cylVtx[2 + i * 2 + 1].n.ob[2] = vtxZ;
+            cylVtx[2 + i * 2 + 1].n.flag = 0;
+            cylVtx[2 + i * 2 + 1].n.tc[0] = 0;
+            cylVtx[2 + i * 2 + 1].n.tc[1] = 0;
+            cylVtx[2 + i * 2 + 1].n.n[0] = normX;
+            cylVtx[2 + i * 2 + 1].n.n[1] = 0;
+            cylVtx[2 + i * 2 + 1].n.n[2] = normZ;
+            cylVtx[2 + i * 2 + 1].n.a = 255;
+        }
+
+        gSPSetGeometryMode(cylGfxP++, G_CULL_BACK | G_SHADING_SMOOTH);
+        gSPVertex(cylGfxP++, cylVtx, 2 + 12 * 2, 0);
+
+        for (i = 0; i < 12; ++i) {
+            s32 p = (i + 12 - 1) % 12;
+
+            gSP2Triangles(cylGfxP++, 2 + p * 2 + 0, 2 + i * 2 + 0, 2 + i * 2 + 1, 0, 2 + p * 2 + 0, 2 + i * 2 + 1,
+                          2 + p * 2 + 1, 0);
+        }
+
+        gSPClearGeometryMode(cylGfxP++, G_SHADING_SMOOTH);
+
+        for (i = 0; i < 12; ++i) {
+            s32 p = (i + 12 - 1) % 12;
+
+            gSP2Triangles(cylGfxP++, 0, 2 + i * 2 + 0, 2 + p * 2 + 0, 0, 1, 2 + p * 2 + 1, 2 + i * 2 + 1, 0);
+        }
+
+        gSPClearGeometryMode(cylGfxP++, G_CULL_BACK);
+        gSPEndDisplayList(cylGfxP++);
+    }
+
+    Matrix_Push();
+
+    Matrix_Translate(x, y, z, MTXMODE_NEW);
+    Matrix_Scale(radius / 128.0f, height / 128.0f, radius / 128.0f, MTXMODE_APPLY);
+
+    gSPMatrix((*gfxP)++, Matrix_NewMtx(gfxCtx, __FILE__, __LINE__), G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_PUSH);
+    gSPDisplayList((*gfxP)++, pCylGfx);
+    gSPPopMatrix((*gfxP)++, G_MTX_MODELVIEW);
+
+    Matrix_Pop();
+}
+
+static Gfx sPolyGfxInit[] = {
+    gsSPLoadGeometryMode(G_ZBUFFER | G_SHADE | G_LIGHTING),
+    gsSPTexture(0, 0, 0, G_TX_RENDERTILE, G_OFF),
+    gsDPPipeSync(),
+    gsDPSetCycleType(G_CYC_1CYCLE),
+    gsDPSetRenderMode(
+        Z_CMP | IM_RD | CVG_DST_FULL | FORCE_BL | ZMODE_XLU | GBL_c1(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA),
+        Z_CMP | IM_RD | CVG_DST_FULL | FORCE_BL | ZMODE_XLU | GBL_c2(G_BL_CLR_IN, G_BL_A_IN, G_BL_CLR_MEM, G_BL_1MA)),
+    gsDPSetCombineLERP(PRIMITIVE, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, PRIMITIVE, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+    gsDPSetEnvColor(255, 255, 255, 128),
+    gsSPEndDisplayList(),
+};
+
 void Math3D_DrawCylinder(GlobalContext* globalCtx, Cylinder16* cyl) {
+    OPEN_DISPS(globalCtx->state.gfxCtx, __FILE__, __LINE__);
+
+    gSPDisplayList(POLY_XLU_DISP++, sPolyGfxInit);
+    gDPSetPrimColor(POLY_XLU_DISP++, 0, 0, 255, 255, 255, 255);
+
+    Math3D_DrawCylinderImpl(globalCtx->state.gfxCtx, &POLY_XLU_DISP, cyl->pos.x, cyl->pos.y + cyl->yShift, cyl->pos.z,
+                            cyl->radius, cyl->height);
+
+    CLOSE_DISPS(globalCtx->state.gfxCtx, __FILE__, __LINE__);
 }
