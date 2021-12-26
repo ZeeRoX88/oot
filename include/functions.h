@@ -1744,6 +1744,7 @@ s32 Math3D_XYInSphere(Sphere16* sphere, f32 x, f32 y);
 s32 Math3D_YZInSphere(Sphere16* sphere, f32 y, f32 z);
 void Math3D_DrawSphere(GlobalContext* globalCtx, Sphere16* sph);
 void Math3D_DrawCylinder(GlobalContext* globalCtx, Cylinder16* cyl);
+void Math3D_DrawCylinderImpl(GraphicsContext* gfxCtx, Gfx** gfxP, f32 x, f32 y, f32 z, s16 radius, s16 height);
 s16 Math_Atan2S(f32 x, f32 y);
 f32 Math_Atan2F(f32 x, f32 y);
 void Matrix_Init(GameState* gameState);
