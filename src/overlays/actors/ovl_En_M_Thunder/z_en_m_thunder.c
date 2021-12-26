@@ -73,8 +73,8 @@ void EnMThunder_Init(Actor* thisx, GlobalContext* globalCtx2) {
                               this->actor.world.pos.z, 255, 255, 255, 0);
     this->lightNode = LightContext_InsertLight(globalCtx, &globalCtx->lightCtx, &this->lightInfo);
     this->collider.dim.radius = 0;
-    this->collider.dim.height = 40;
-    this->collider.dim.yShift = -20;
+    this->collider.dim.height = 50;
+    this->collider.dim.yShift = -30;
     this->unk_1C4 = 8;
     this->unk_1B4 = 0.0f;
     this->actor.world.pos = player->bodyPartsPos[0];
@@ -356,8 +356,8 @@ void EnMThunder_Beamblade(EnMThunder* this, GlobalContext* globalCtx) {
         Collider_UpdateCylinder(&this->actor, &this->collider);
         CollisionCheck_SetAT(globalCtx, &globalCtx->colChkCtx, &this->collider.base);
         this->collider.dim.radius = (this->actor.scale.x * 6.0f);
-        this->collider.dim.pos.x += ((Math_CosS(this->actor.prevPos.x) * - 50.0f) * (Math_SinS(this->actor.shape.rot.y)));
-        this->collider.dim.pos.z += ((Math_CosS(this->actor.prevPos.x) * - 50.0f) * (Math_CosS(this->actor.shape.rot.y)));
+        this->collider.dim.pos.x += ((Math_CosS(this->actor.prevPos.x) + - 50.0f) * (Math_SinS(this->actor.shape.rot.y)));
+        this->collider.dim.pos.z += ((Math_CosS(this->actor.prevPos.x) + - 50.0f) * (Math_CosS(this->actor.shape.rot.y)));
     }
 
     if (this->unk_1C4 > 0) { // unk_1C4 = timer
