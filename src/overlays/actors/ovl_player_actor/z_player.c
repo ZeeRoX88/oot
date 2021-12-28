@@ -984,6 +984,7 @@ static s8 sItemActionParams[] = {
     PLAYER_AP_SWORD_KOKIRI,
     PLAYER_AP_SWORD_MASTER,
     PLAYER_AP_SWORD_BGS,
+    PLAYER_AP_SHIELD, // added for standalone shield
 };
 
 static s32 (*D_80853EDC[])(Player* this, GlobalContext* globalCtx) = {
@@ -996,7 +997,7 @@ static s32 (*D_80853EDC[])(Player* this, GlobalContext* globalCtx) = {
     func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C,
     func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C,
     func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C,
-    func_8083485C, func_8083485C, func_8083485C, func_8083485C,
+    func_8083485C, func_8083485C, func_8083485C, func_8083485C, func_8083485C,
 };
 
 static void (*D_80853FE8[])(GlobalContext* globalCtx, Player* this) = {
@@ -1009,7 +1010,7 @@ static void (*D_80853FE8[])(GlobalContext* globalCtx, Player* this) = {
     func_80833770, func_80833770, func_80833770, func_80833770, func_80833770, func_80833770, func_80833770,
     func_80833770, func_80833770, func_80833770, func_80833770, func_80833770, func_80833770, func_80833770,
     func_80833770, func_80833770, func_80833770, func_80833770, func_80833770, func_80833770, func_80833770,
-    func_80833770, func_80833770, func_80833770, func_80833770,
+    func_80833770, func_80833770, func_80833770, func_80833770, func_80833770,
 };
 
 static struct_808540F4 D_808540F4[] = {
@@ -1887,12 +1888,15 @@ void func_80833DF8(Player* this, GlobalContext* globalCtx) {
         }
     }
 
+    // changed for standalone shield
     if (!(this->stateFlags1 & 0x20000800) && !func_8008F128(this)) {
         if (this->itemActionParam >= PLAYER_AP_FISHING_POLE) {
-            if (!func_80833C50(this, B_BTN_ITEM) && !func_80833C50(this, C_BTN_ITEM(0)) &&
-                !func_80833C50(this, C_BTN_ITEM(1)) && !func_80833C50(this, C_BTN_ITEM(2))) {
-                func_80835F44(globalCtx, this, ITEM_NONE);
-                return;
+            if ((this->itemActionParam != PLAYER_AP_SHIELD)) {
+                if (!func_80833C50(this, B_BTN_ITEM) && !func_80833C50(this, C_BTN_ITEM(0)) &&
+                    !func_80833C50(this, C_BTN_ITEM(1)) && !func_80833C50(this, C_BTN_ITEM(2))) {
+                    func_80835F44(globalCtx, this, ITEM_NONE);
+                    return;
+                }
             }
         }
 
@@ -1945,8 +1949,18 @@ void func_808340DC(Player* this, GlobalContext* globalCtx) {
     this->unk_15A = ABS(sp38);
 
     anim = D_808540F4[this->unk_15A].anim;
-    if ((anim == &gPlayerAnim_002F30) && (this->currentShield == PLAYER_SHIELD_NONE)) {
+
+    // changed for standalone shield
+    if (((anim == &gPlayerAnim_002F30) && (this->currentShield == PLAYER_SHIELD_NONE))) {
         anim = &gPlayerAnim_002F40;
+    }
+
+    if (sp37 == PLAYER_AP_SHIELD) {
+        anim = &gPlayerAnim_002A70;
+    }
+
+    if ((sp37 == PLAYER_AP_SWORD_KOKIRI || sp37 == PLAYER_AP_SWORD_MASTER) && this->modelGroup == 16) {
+        anim = &gPlayerAnim_002A70;
     }
 
     phi_f2 = Animation_GetLastFrame(anim);
@@ -1961,9 +1975,10 @@ void func_808340DC(Player* this, GlobalContext* globalCtx) {
         phi_f12 = phi_f2;
     }
 
-    if (sp37 != PLAYER_AP_NONE) {
+    // changed for slower beta item pulls
+    /* if (sp37 != PLAYER_AP_NONE) {
         phi_f0 *= 2.0f;
-    }
+    } */
 
     LinkAnimation_Change(globalCtx, &this->skelAnime2, anim, phi_f0, phi_f12, phi_f14, ANIMMODE_ONCE, 0.0f);
 
@@ -2045,10 +2060,13 @@ s32 func_8083442C(Player* this, GlobalContext* globalCtx) {
     return 0;
 }
 
+// changed for standalone shield
 void func_80834594(GlobalContext* globalCtx, Player* this) {
     if (this->heldItemActionParam != PLAYER_AP_NONE) {
         if (func_8008F2BC(this, this->heldItemActionParam) >= 0) {
             func_808328EC(this, NA_SE_IT_SWORD_PUTAWAY);
+        } else if (this->heldItemActionParam == PLAYER_AP_SHIELD) {
+            func_808328EC(this, NA_SE_PL_TAKE_OUT_SHIELD);
         } else {
             func_808328EC(this, NA_SE_PL_CHANGE_ARMS);
         }
@@ -2058,7 +2076,7 @@ void func_80834594(GlobalContext* globalCtx, Player* this) {
 
     if (func_8008F2BC(this, this->heldItemActionParam) >= 0) {
         func_808328EC(this, NA_SE_IT_SWORD_PICKOUT);
-    } else if (this->heldItemActionParam != PLAYER_AP_NONE) {
+    } else if (this->heldItemActionParam != PLAYER_AP_NONE && this->heldItemActionParam != PLAYER_AP_SHIELD) {
         func_808328EC(this, NA_SE_PL_CHANGE_ARMS);
     }
 }
@@ -2157,10 +2175,11 @@ s32 func_808349DC(Player* this, GlobalContext* globalCtx) {
     }
 }
 
+// change made so Link doesn't use items after taking them out
 s32 func_80834A2C(Player* this, GlobalContext* globalCtx) {
     if (LinkAnimation_Update(globalCtx, &this->skelAnime2) ||
         ((Player_ItemToActionParam(this->heldItemId) == this->heldItemActionParam) &&
-         (D_80853614 = (D_80853614 || ((this->modelAnimType != 3) && (globalCtx->shootingGalleryStatus == 0)))))) {
+         (D_80853614 = (D_80853614 || (0 && (globalCtx->shootingGalleryStatus == 0)))))) {
         func_80833638(this, D_80853EDC[this->heldItemActionParam]);
         this->unk_834 = 0;
         this->unk_6AC = 0;
@@ -2754,7 +2773,8 @@ void func_80835F44(GlobalContext* globalCtx, Player* this, s32 item) {
                 return;
             }
 
-            if (actionParam >= PLAYER_AP_MASK_KEATON) {
+            // changed for standalone shield
+            if (actionParam >= PLAYER_AP_MASK_KEATON && actionParam <= PLAYER_AP_MASK_TRUTH) {
                 if (this->currentMask != PLAYER_MASK_NONE) {
                     this->currentMask = PLAYER_MASK_NONE;
                 } else {
@@ -2764,8 +2784,9 @@ void func_80835F44(GlobalContext* globalCtx, Player* this, s32 item) {
                 return;
             }
 
+            // changed for standalone shield
             if (((actionParam >= PLAYER_AP_OCARINA_FAIRY) && (actionParam <= PLAYER_AP_OCARINA_TIME)) ||
-                (actionParam >= PLAYER_AP_BOTTLE_FISH)) {
+                ((actionParam >= PLAYER_AP_BOTTLE_FISH) && (actionParam <= PLAYER_AP_CLAIM_CHECK))) {
                 if (!func_8008E9C4(this) ||
                     ((actionParam >= PLAYER_AP_BOTTLE_POTION_RED) && (actionParam <= PLAYER_AP_BOTTLE_FAIRY))) {
                     func_8002D53C(globalCtx, &globalCtx->actorCtx.titleCtx);
@@ -4913,8 +4934,10 @@ s32 func_8083B644(Player* this, GlobalContext* globalCtx) {
     return 0;
 }
 
+// change to allow first person view when Link carries items
 s32 func_8083B8F4(Player* this, GlobalContext* globalCtx) {
-    if (!(this->stateFlags1 & 0x800800) && Camera_CheckValidMode(Gameplay_GetCamera(globalCtx, 0), 6)) {
+    // if (!(this->stateFlags1 & 0x800800) && Camera_CheckValidMode(Gameplay_GetCamera(globalCtx, 0), 6)) {
+    if (!(this->stateFlags1 & 0x800000) && Camera_CheckValidMode(Gameplay_GetCamera(globalCtx, 0), 6)) {
         if ((this->actor.bgCheckFlags & 1) ||
             (func_808332B8(this) && (this->actor.yDistToWater < this->ageProperties->unk_2C))) {
             this->unk_6AD = 1;
@@ -4979,16 +5002,17 @@ s32 func_8083BBA0(Player* this, GlobalContext* globalCtx) {
     return 0;
 }
 
+/* disable rolling completely
 void func_8083BC04(Player* this, GlobalContext* globalCtx) {
     func_80835C58(globalCtx, this, func_80844708, 0);
     LinkAnimation_PlayOnceSetSpeed(globalCtx, &this->skelAnime, D_80853A94[this->modelAnimType], 1.25f * D_808535E8);
-}
+} */
 
 s32 func_8083BC7C(Player* this, GlobalContext* globalCtx) {
-    if ((this->unk_84B[this->unk_846] == 0) && (D_808535E4 != 7)) {
+    /* if ((this->unk_84B[this->unk_846] == 0) && (D_808535E4 != 7)) {
         func_8083BC04(this, globalCtx);
         return 1;
-    }
+    } */
 
     return 0;
 }
@@ -5017,19 +5041,19 @@ s32 func_8083BDBC(Player* this, GlobalContext* globalCtx) {
         (SurfaceType_GetSlope(&globalCtx->colCtx, this->actor.floorPoly, this->actor.floorBgId) != 1)) {
         sp2C = this->unk_84B[this->unk_846];
 
-        if (sp2C <= 0) {
+        if (sp2C < 0) { // modified to allow forward jump
             if (func_80833BCC(this)) {
-                if (this->actor.category != ACTORCAT_PLAYER) {
+                if (1) { // modified to allow in-place jump
                     if (sp2C < 0) {
                         func_808389E8(this, &gPlayerAnim_002FE0, REG(69) / 100.0f, globalCtx);
                     } else {
-                        func_8083BC04(this, globalCtx);
+                        // func_8083BC04(this, globalCtx);
                     }
                 } else {
                     if (Player_GetSwordHeld(this) && func_808365C8(this)) {
                         func_8083BA90(globalCtx, this, 17, 5.0f, 5.0f);
                     } else {
-                        func_8083BC04(this, globalCtx);
+                        // func_8083BC04(this, globalCtx);
                     }
                 }
                 return 1;
@@ -5106,10 +5130,16 @@ s32 func_8083C1DC(Player* this, GlobalContext* globalCtx) {
         if (func_8083BC7C(this, globalCtx)) {
             return 1;
         }
-        if ((this->unk_837 == 0) && (this->heldItemActionParam >= PLAYER_AP_SWORD_MASTER)) {
-            func_80835F44(globalCtx, this, ITEM_NONE);
+        // item put away
+        if ((this->heldItemActionParam >= PLAYER_AP_SWORD_MASTER)) { // changed to allow while moving
+            if (!Player_IsChildWithHylianShield(this) && (this->heldItemActionParam == PLAYER_AP_SWORD_MASTER ||
+                                                          this->heldItemActionParam == PLAYER_AP_SWORD_KOKIRI)) {
+                func_80835F44(globalCtx, this, ITEM_SHIELD_DEKU);
+            } else {
+                func_80835F44(globalCtx, this, ITEM_NONE);
+            }
         } else {
-            this->stateFlags2 ^= 0x100000;
+            this->stateFlags2 ^= 0x100000; // navi
         }
     }
 
@@ -8055,11 +8085,12 @@ void func_8084411C(Player* this, GlobalContext* globalCtx) {
             anim = &gPlayerAnim_002538;
             func_80833C3C(this);
         } else if (this->fallDistance <= 80) {
+            // landing animation happens here
             anim = D_80853A7C[this->modelAnimType];
-        } else if ((this->fallDistance < 800) && (this->unk_84B[this->unk_846] == 0) && !(this->stateFlags1 & 0x800)) {
+        } /* else if ((this->fallDistance < 800) && (this->unk_84B[this->unk_846] == 0) && !(this->stateFlags1 & 0x800)) {
             func_8083BC04(this, globalCtx);
             return;
-        }
+        } */ // modified to disable rolling from heights
 
         sp3C = func_80843E64(globalCtx, this);
 
@@ -10424,10 +10455,9 @@ void Player_Draw(Actor* thisx, GlobalContext* globalCtx2) {
         func_80093C80(globalCtx);
         func_80093D84(globalCtx->state.gfxCtx);
 
-        if (this->invincibilityTimer > 0) {
-            this->unk_88F += CLAMP(50 - this->invincibilityTimer, 8, 40);
-            POLY_OPA_DISP =
-                Gfx_SetFog2(POLY_OPA_DISP, 255, 0, 0, 0, 0, 4000 - (s32)(Math_CosS(this->unk_88F * 256) * 2000.0f));
+        if ((this->invincibilityTimer > 0) && (this->invincibilityTimer % 2) == 0) {
+            // Link's damage flash from April 1998
+            POLY_OPA_DISP = Gfx_SetFog2(POLY_OPA_DISP, 155, 155, 20, 0, 0, 500);
         }
 
         func_8002EBCC(&this->actor, globalCtx, 0);
