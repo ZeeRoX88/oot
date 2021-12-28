@@ -23,10 +23,10 @@ s16 sBootData[PLAYER_BOOTS_MAX][17] = {
     { 200, 1000, 300, 800, 500, 400, 800, 400, 800, 550, -100, 600, 540, 750, 125, 400, 200 },
 };
 
-// Used to map action params to model groups
+// Used to map action params to model groups, added last entry for standalone shield
 u8 sActionModelGroups[] = {
-    3,  15, 10, 2,  2,  5,  10, 11, 6,  6, 6, 6, 6, 6, 6, 6, 9, 9, 7, 7, 8, 3, 3, 6, 3, 3, 3, 3, 12, 13, 14, 14, 14, 14,
-    14, 14, 14, 14, 14, 14, 14, 14, 14, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  3,  3,  3,  3,
+    3,  15, 10, 2,  2,  5,  10, 11, 6,  6, 6, 6, 6, 6, 6, 6, 9, 9, 7, 7, 8, 3, 3, 3, 3, 3, 3, 3, 12, 13, 14, 14, 14, 14,
+    14, 14, 14, 14, 14, 14, 14, 3,  14, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  3,  3,  3,  3,  16,
 };
 
 TextTriggerEntry sTextTriggers[] = {
@@ -38,10 +38,10 @@ TextTriggerEntry sTextTriggers[] = {
 
 // Used to map model groups to model types for [animation, left hand, right hand, sheath, waist]
 u8 gPlayerModelTypes[][5] = {
-    { 2, 0, 10, 16, 20 }, { 1, 2, 9, 19, 20 },  { 1, 2, 10, 17, 20 }, { 0, 0, 8, 18, 20 },
-    { 0, 0, 8, 18, 20 },  { 3, 4, 9, 19, 20 },  { 4, 1, 11, 18, 20 }, { 5, 0, 8, 18, 20 },
-    { 0, 6, 8, 18, 20 },  { 4, 0, 15, 18, 20 }, { 3, 1, 9, 18, 20 },  { 3, 5, 9, 18, 20 },
-    { 0, 0, 13, 18, 20 }, { 0, 0, 14, 18, 20 }, { 0, 7, 8, 18, 20 },  { 0, 2, 8, 19, 20 },
+    { 2, 0, 10, 16, 20 }, { 1, 2, 9, 19, 20 },  { 1, 2, 10, 17, 20 }, { 0, 0, 8, 18, 20 },  
+    { 0, 0, 8, 18, 20 },  { 3, 4, 9, 19, 20 },  { 4, 1, 11, 18, 20 }, { 5, 0, 8, 18, 20 },  
+    { 0, 6, 8, 18, 20 },  { 4, 0, 15, 18, 20 }, { 3, 1, 9, 18, 20 },  { 3, 5, 9, 18, 20 },  
+    { 0, 0, 13, 18, 20 }, { 0, 0, 14, 18, 20 }, { 0, 7, 8, 18, 20 },  { 0, 2, 8, 19, 20 },  { 2, 0, 10, 16, 20 },
 };
 
 Gfx* D_80125CE8[] = {
@@ -327,6 +327,7 @@ s32 Player_ActionToModelGroup(Player* this, s32 actionParam) {
     }
 }
 
+// added for standalone shield
 void Player_SetModelsForHoldingShield(Player* this) {
     if ((this->stateFlags1 & 0x400000) &&
         ((this->itemActionParam < 0) || (this->itemActionParam == this->heldItemActionParam))) {
@@ -340,7 +341,18 @@ void Player_SetModelsForHoldingShield(Player* this) {
             }
             this->sheathDLists = &sPlayerDListGroups[this->sheathType][(void)0, gSaveContext.linkAge];
             this->modelAnimType = 2;
-            this->itemActionParam = -1;
+
+            // changed to make shield stay out after using it
+            if (this->heldItemActionParam == PLAYER_AP_SWORD_KOKIRI ||
+                this->heldItemActionParam == PLAYER_AP_SWORD_MASTER ||
+                this->heldItemActionParam == PLAYER_AP_SWORD_BGS ||
+                this->heldItemActionParam == PLAYER_AP_SHIELD) {
+                this->itemActionParam = -1;
+            } else {
+                this->heldItemActionParam = this->itemActionParam = PLAYER_AP_SHIELD;
+                this->heldItemId = ITEM_SHIELD_DEKU;
+                this->modelGroup = this->nextModelGroup = Player_ActionToModelGroup(this, PLAYER_AP_SHIELD);
+            }
         }
     }
 }
