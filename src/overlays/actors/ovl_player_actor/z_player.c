@@ -3620,6 +3620,8 @@ void func_808382BC(Player* this) {
     }
 }
 
+#define DMG_INVIN 40 // 2 seconds
+
 s32 func_808382DC(Player* this, GlobalContext* globalCtx) {
     s32 pad;
     s32 sp68 = false;
@@ -3675,7 +3677,7 @@ s32 func_808382DC(Player* this, GlobalContext* globalCtx) {
             }
 
             this->actor.colChkInfo.damage += this->unk_8A0;
-            func_80837C0C(globalCtx, this, sp5C[this->unk_8A1 - 1], this->unk_8A4, this->unk_8A8, this->unk_8A2, 20);
+            func_80837C0C(globalCtx, this, sp5C[this->unk_8A1 - 1], this->unk_8A4, this->unk_8A8, this->unk_8A2, DMG_INVIN);
         } else {
             sp64 = (this->shieldQuad.base.acFlags & AC_BOUNCED) != 0;
 
@@ -3751,7 +3753,7 @@ s32 func_808382DC(Player* this, GlobalContext* globalCtx) {
                     sp4C = 0;
                 }
 
-                func_80837C0C(globalCtx, this, sp4C, 4.0f, 5.0f, Actor_WorldYawTowardActor(ac, &this->actor), 20);
+                func_80837C0C(globalCtx, this, sp4C, 4.0f, 5.0f, Actor_WorldYawTowardActor(ac, &this->actor), DMG_INVIN);
             } else if (this->invincibilityTimer != 0) {
                 return 0;
             } else {
@@ -3767,7 +3769,7 @@ s32 func_808382DC(Player* this, GlobalContext* globalCtx) {
                      ((this->currentTunic != PLAYER_TUNIC_GORON) || (this->unk_A79 >= D_808544F4[sp48])))) {
                     this->unk_A79 = 0;
                     this->actor.colChkInfo.damage = 4;
-                    func_80837C0C(globalCtx, this, 0, 4.0f, 5.0f, this->actor.shape.rot.y, 20);
+                    func_80837C0C(globalCtx, this, 0, 4.0f, 5.0f, this->actor.shape.rot.y, DMG_INVIN);
                 } else {
                     return 0;
                 }
