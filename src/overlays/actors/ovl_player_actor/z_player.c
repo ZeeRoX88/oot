@@ -10457,8 +10457,12 @@ void Player_Draw(Actor* thisx, GlobalContext* globalCtx2) {
         func_80093C80(globalCtx);
         func_80093D84(globalCtx->state.gfxCtx);
 
+        /* if (this->invincibilityTimer > 0) {
+            this->unk_88F += CLAMP(50 - this->invincibilityTimer, 8, 40);
+            POLY_OPA_DISP =
+                Gfx_SetFog2(POLY_OPA_DISP, 255, 0, 0, 0, 0, 4000 - (s32)(Math_CosS(this->unk_88F * 256) * 2000.0f)); */
+        // changed to Link's damage flash from April 1998
         if ((this->invincibilityTimer > 0) && (this->invincibilityTimer % 2) == 0) {
-            // Link's damage flash from April 1998
             POLY_OPA_DISP = Gfx_SetFog2(POLY_OPA_DISP, 155, 155, 20, 0, 0, 500);
         }
 
