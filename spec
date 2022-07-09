@@ -3371,6 +3371,12 @@ beginseg
 endseg
 
 beginseg
+    name "ovl_Bg_Icefloe"
+    include "build/src/overlays/actors/ovl_Bg_Icefloe/z_bg_icefloe.o"
+    include "build/src/overlays/actors/ovl_Bg_Icefloe/ovl_Bg_Icefloe_reloc.o"
+endseg
+
+beginseg
     name "gameplay_keep"
     romalign 0x1000
     include "build/assets/objects/gameplay_keep/gameplay_keep.o"
