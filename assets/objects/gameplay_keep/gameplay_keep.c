@@ -73,7 +73,7 @@ CamData gMagicIcefloeCol_camDataList_00002E10[] = {
 
 SurfaceType gMagicIcefloeCol_surfaceType_00002E18[] = {
     { 0x00000000, 0x000007CC },
-    { 0x0000A000, 0x000007CC },
+    { 0x0000A000, 0x000007CC }, // use { 0x00000000, 0x000007CC }, to make surface not slippery
 };
 
 CollisionPoly gMagicIcefloeCol_polygons_00002E28[] = {
