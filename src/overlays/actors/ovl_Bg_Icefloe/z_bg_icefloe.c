@@ -115,7 +115,7 @@ void BgIcefloe_Init(Actor* thisx, PlayState* play) {
     BgIcefloe* this = (BgIcefloe*)thisx;
     CollisionHeader* colHeader = NULL;
 
-    if (sSpawnCount >= 3) {
+    if (sSpawnCount >= 3) { // use higher number if you want spawn more platforms at the same time
         Actor_Kill(&this->dyna.actor);
     } else {
         BgIcefloe_SpawnFragments(this, play);
@@ -123,7 +123,7 @@ void BgIcefloe_Init(Actor* thisx, PlayState* play) {
         sSpawnCount += 1;
     }
 
-    this->timer = 400;
+    this->timer = 400; // the life duration of a single platform until it melts
 
     DynaPolyActor_Init(&this->dyna, DPM_PLAYER);
     CollisionHeader_GetVirtual(&gMagicIcefloeCol, &colHeader);
@@ -181,11 +181,13 @@ void BgIcefloe_Melt(BgIcefloe* this, PlayState* play) {
     vel.y = this->dyna.actor.scale.y * 100.0f;
     vel.z = 0.0f;
 
-    for (i = 0; i < 1; i++) {
-        pos.x = this->dyna.actor.world.pos.x;
-        pos.y = this->dyna.actor.world.pos.y;
-        pos.z = this->dyna.actor.world.pos.z;
-        func_8002829C(play, &pos, &vel, &accel, &sColorWhite, &sColorGray, this->dyna.actor.scale.x * 100.0f * 10, this->dyna.actor.scale.x * 100.0f * 20 * 5);
+    if (play->state.frames & 2) { // this spawns the effect every two frames if I'm not mistaken
+        for (i = 0; i < 1; i++) {
+            pos.x = this->dyna.actor.world.pos.x;
+            pos.y = this->dyna.actor.world.pos.y;
+            pos.z = this->dyna.actor.world.pos.z;
+            func_8002829C(play, &pos, &vel, &accel, &sColorWhite, &sColorGray, this->dyna.actor.scale.x * 100.0f * 10, this->dyna.actor.scale.x * 100.0f * 20 * 5);
+        }
     }
 
     Math_SmoothStepToF(&this->dyna.actor.scale.x, 0.0f, 0.1f, 0.1f, 0.0f);
