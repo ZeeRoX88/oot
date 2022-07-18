@@ -12,3 +12,5 @@
 [Rankaisija's and Sauraen's Link IK Rig](https://github.com/sauraen/link-rig)
 
 [Fast64 Blender Plugin](https://github.com/Fast-64/fast64)
+
+[Fast64 Scene Creation Tutorial by Richie](https://youtu.be/L-OvwyZG4NI)
